@@ -1,6 +1,6 @@
+import {UseGuards} from '@nestjs/common'
 import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql'
 import {LoginResponse} from '../auth/loginResponse'
-import {MyContext} from '../types/myContext'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {User} from './user.entity'
@@ -9,6 +9,12 @@ import {UserService} from './user.service'
 @Resolver()
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
+
+  @UseGuards()
+  @Query(() => String)
+  protected() {
+    return "heyy I'm protected!"
+  }
 
   @Query(() => [User])
   async users() {

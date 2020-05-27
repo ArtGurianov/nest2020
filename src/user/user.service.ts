@@ -43,6 +43,7 @@ export class UserService {
     }
     res.cookie('jid', this.jwtService.createRefreshToken(user), {
       httpOnly: true,
+      maxAge: 365 * 24 * 60 * 60 * 1000,
     })
     return {
       accessToken: this.jwtService.createAccessToken(user),

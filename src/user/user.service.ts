@@ -1,10 +1,9 @@
 import {Injectable} from '@nestjs/common'
-import {ConfigService} from '@nestjs/config'
 import {InjectRepository} from '@nestjs/typeorm'
 import {compare} from 'bcryptjs'
-import {sign} from 'jsonwebtoken'
 import {LoginResponse} from '../auth/loginResponse'
 import {MyContext} from '../types/myContext'
+import {JwtService} from '../utils/jwt.service'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {User} from './user.entity'
@@ -12,7 +11,7 @@ import {UserRepository} from './user.repository'
 
 @Injectable()
 export class UserService {
-  public constructor(private readonly configService: ConfigService) {}
+  public constructor(private readonly jwtService: JwtService) {}
 
   @InjectRepository(UserRepository)
   private readonly userRepo: UserRepository
@@ -42,31 +41,11 @@ export class UserService {
     if (!valid) {
       throw new Error('wrong password')
     }
-    res.cookie(
-      'jid',
-      sign(
-        {userId: user.id},
-        this.configService.get<string>(
-          'jwtRefreshSecret',
-          '!insecure default value!',
-        ),
-        {
-          expiresIn: '7d',
-        },
-      ),
-      {
-        httpOnly: true,
-      },
-    )
+    res.cookie('jid', this.jwtService.createRefreshToken(user), {
+      httpOnly: true,
+    })
     return {
-      accessToken: sign(
-        {userId: user.id},
-        this.configService.get<string>(
-          'jwtAccessSecret',
-          '!insecure default value!',
-        ),
-        {expiresIn: '15m'},
-      ),
+      accessToken: this.jwtService.createAccessToken(user),
     }
   }
 }

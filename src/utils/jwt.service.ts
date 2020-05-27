@@ -1,0 +1,31 @@
+import {Injectable} from '@nestjs/common'
+import {ConfigService} from '@nestjs/config'
+import {sign} from 'jsonwebtoken'
+import {User} from '../user/user.entity'
+
+@Injectable()
+export class JwtService {
+  public constructor(private readonly configService: ConfigService) {}
+
+  createAccessToken(user: User) {
+    return sign(
+      {userId: user.id},
+      this.configService.get<string>(
+        'jwtAccessSecret',
+        '!insecure default value!',
+      ),
+      {expiresIn: '15m'},
+    )
+  }
+
+  createRefreshToken(user: User) {
+    return sign(
+      {userId: user.id},
+      this.configService.get<string>(
+        'jwtRefreshSecret',
+        '!insecure default value!',
+      ),
+      {expiresIn: '7d'},
+    )
+  }
+}

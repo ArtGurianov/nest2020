@@ -1,8 +1,10 @@
 import {Injectable} from '@nestjs/common'
+import {ConfigService} from '@nestjs/config'
 import {InjectRepository} from '@nestjs/typeorm'
 import {compare} from 'bcryptjs'
 import {sign} from 'jsonwebtoken'
 import {LoginResponse} from '../auth/loginResponse'
+import {MyContext} from '../types/myContext'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {User} from './user.entity'
@@ -10,6 +12,8 @@ import {UserRepository} from './user.repository'
 
 @Injectable()
 export class UserService {
+  public constructor(private readonly configService: ConfigService) {}
+
   @InjectRepository(UserRepository)
   private readonly userRepo: UserRepository
 
@@ -26,7 +30,10 @@ export class UserService {
     return true
   }
 
-  async login({email, password}: LoginInput): Promise<LoginResponse> {
+  async login(
+    {email, password}: LoginInput,
+    {res}: MyContext,
+  ): Promise<LoginResponse> {
     const user = await this.userRepo.findOne({where: {email}})
     if (!user) {
       throw new Error('Cannot find user')
@@ -35,6 +42,31 @@ export class UserService {
     if (!valid) {
       throw new Error('wrong password')
     }
-    return {accessToken: sign({userId: user.id}, 'secret', {expiresIn: '15m'})}
+    res.cookie(
+      'jid',
+      sign(
+        {userId: user.id},
+        this.configService.get<string>(
+          'jwtRefreshSecret',
+          '!insecure default value!',
+        ),
+        {
+          expiresIn: '7d',
+        },
+      ),
+      {
+        httpOnly: true,
+      },
+    )
+    return {
+      accessToken: sign(
+        {userId: user.id},
+        this.configService.get<string>(
+          'jwtAccessSecret',
+          '!insecure default value!',
+        ),
+        {expiresIn: '15m'},
+      ),
+    }
   }
 }

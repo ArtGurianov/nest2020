@@ -16,7 +16,7 @@ export class UserController {
 
   @Post('/refresh_token')
   async useRefreshToken(@Req() req: Request, @Res() res: Response) {
-    const accessToken = await this.userService.useRefreshToken(req)
+    const accessToken = await this.userService.useRefreshToken(req, res)
     if (!accessToken) return res.send({ok: false, accessToken: ''})
     return res.send({ok: true, accessToken})
   }

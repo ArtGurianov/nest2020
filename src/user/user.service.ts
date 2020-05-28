@@ -2,7 +2,7 @@ import {Injectable} from '@nestjs/common'
 import {InjectRepository} from '@nestjs/typeorm'
 import {compare} from 'bcryptjs'
 import cookie from 'cookie'
-import {Request} from 'express'
+import {Request, Response} from 'express'
 import {LoginResponse} from '../auth/loginResponse'
 import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
@@ -43,16 +43,23 @@ export class UserService {
     if (!valid) {
       throw new Error('wrong password')
     }
-    res.cookie('jid', this.jwtService.createRefreshToken(user), {
-      httpOnly: true,
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-    })
+    const refreshToken = this.jwtService.createRefreshToken(user)
+    this.jwtService.sendRefreshToken(res, refreshToken)
     return {
       accessToken: this.jwtService.createAccessToken(user),
     }
   }
 
-  async useRefreshToken(req: Request): Promise<string | null> {
+  async revokeRefreshToken(userId: string) {
+    const result = await this.userRepo.increment(
+      {id: userId},
+      'tokenVersion',
+      1,
+    )
+    return !!result
+  }
+
+  async useRefreshToken(req: Request, res: Response): Promise<string | null> {
     if (!req.headers.cookie) {
       console.log('NO HEADERS COOKIE')
       return null
@@ -86,6 +93,14 @@ export class UserService {
       console.log('NO ACCESS TOKEN')
       return null
     }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      console.log('Used Refresh token')
+      return null
+    }
+
+    const refreshToken = this.jwtService.createRefreshToken(user)
+    this.jwtService.sendRefreshToken(res, refreshToken)
 
     return accessToken
   }

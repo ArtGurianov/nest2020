@@ -37,4 +37,10 @@ export class UserResolver {
     const result = await this.userService.login(loginInput, ctx)
     return result
   }
+
+  @Mutation(() => Boolean)
+  async revokeRefreshToken(@Args('userId') userId: string) {
+    const success = await this.userService.revokeRefreshToken(userId)
+    return success
+  }
 }

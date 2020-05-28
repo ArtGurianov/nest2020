@@ -1,5 +1,6 @@
 import {Injectable} from '@nestjs/common'
 import {ConfigService} from '@nestjs/config'
+import {Response} from 'express'
 import {sign, verify} from 'jsonwebtoken'
 import {User} from '../user/user.entity'
 
@@ -20,13 +21,21 @@ export class JwtService {
 
   createRefreshToken(user: User) {
     return sign(
-      {userId: user.id},
+      {userId: user.id, tokenVersion: user.tokenVersion},
       this.configService.get<string>(
         'jwtRefreshSecret',
         '!insecure default value!',
       ),
       {expiresIn: '7d'},
     )
+  }
+
+  sendRefreshToken(res: Response, token: string) {
+    //return?
+    res.cookie('jid', token, {
+      httpOnly: true,
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+    })
   }
 
   verifyAccessToken(jid: string) {

@@ -5,6 +5,7 @@
 type User {
   id: ID!
   email: String!
+  tokenVersion: Float!
 }
 
 type LoginResponse {
@@ -19,6 +20,7 @@ type Query {
 type Mutation {
   register(registerInput: RegisterInput!): Boolean!
   login(loginInput: LoginInput!): LoginResponse!
+  revokeRefreshToken(userId: String!): Boolean!
 }
 
 """New user data"""

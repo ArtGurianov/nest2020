@@ -1,6 +1,8 @@
 import {Injectable} from '@nestjs/common'
 import {InjectRepository} from '@nestjs/typeorm'
 import {compare} from 'bcryptjs'
+import cookie from 'cookie'
+import {Request} from 'express'
 import {LoginResponse} from '../auth/loginResponse'
 import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
@@ -48,5 +50,43 @@ export class UserService {
     return {
       accessToken: this.jwtService.createAccessToken(user),
     }
+  }
+
+  async useRefreshToken(req: Request): Promise<string | null> {
+    if (!req.headers.cookie) {
+      console.log('NO HEADERS COOKIE')
+      return null
+    }
+
+    const {jid} = cookie.parse(req.headers.cookie)
+
+    if (!jid) {
+      console.log('NO JID')
+      return null
+    }
+
+    console.log(jid)
+    const payload = this.jwtService.verifyRefreshToken(jid)
+
+    if (!payload) {
+      console.log('PAYLOAD')
+      return null
+    }
+
+    const user = await this.userRepo.findOne({id: payload.userId})
+
+    if (!user) {
+      console.log('NO USER')
+      return null
+    }
+
+    const accessToken = this.jwtService.createAccessToken(user)
+
+    if (!accessToken) {
+      console.log('NO ACCESS TOKEN')
+      return null
+    }
+
+    return accessToken
   }
 }

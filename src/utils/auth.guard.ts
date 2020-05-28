@@ -4,13 +4,12 @@ import {
   Inject,
   UnauthorizedException,
 } from '@nestjs/common'
-import {ConfigService} from '@nestjs/config'
 import {GqlContextType, GqlExecutionContext} from '@nestjs/graphql'
-import {verify} from 'jsonwebtoken'
+import {JwtService} from './jwt.service'
 
 export class AuthGuard implements CanActivate {
   public constructor(
-    @Inject('ConfigService') private readonly configService: ConfigService,
+    @Inject('JwtService') private readonly jwtService: JwtService,
   ) {}
 
   getContextAndRequest(context: ExecutionContext) {
@@ -26,27 +25,17 @@ export class AuthGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    // if (context.getType() === 'http') {
-    //   const ctx: any = context.switchToHttp()
-    //   const req: Request = ctx.getRequest()
-    //   const authHeader: any = req.headers.get('authorization')
-    // } else if (context.getType<GqlContextType>() === 'graphql') {
-    //   const ctx: any = GqlExecutionContext.create(context).getContext()
-    //   const req: Request = ctx.Request
-    //   //authHeader = req.headers['authorization']
-    //   const authHeader: any = req.headers.get('authorization')
-    // }
     const {ctx, req} = this.getContextAndRequest(context)
     const authHeader = req.headers['authorization']
 
-    if (!authHeader)
+    if (!authHeader) {
       throw new UnauthorizedException('Please login to access this resource!')
+    }
     try {
       const token = authHeader.split(' ')[1]
-      const jwtPayload = verify(
-        token,
-        this.configService.get('jwtAccessSecret', '!insecure default value!'),
-      )
+      const jwtPayload = this.jwtService.verifyAccessToken(token)
+      if (!jwtPayload)
+        throw new UnauthorizedException('Please login to access this resource!')
       ctx.jwtPayload = jwtPayload as any
       req.jwtPayload = jwtPayload as any
       return true
@@ -56,5 +45,3 @@ export class AuthGuard implements CanActivate {
     }
   }
 }
-
-//TODO need to somehow pass jwtPayload to Controller endpoint.

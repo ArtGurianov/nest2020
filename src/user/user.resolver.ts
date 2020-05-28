@@ -1,6 +1,8 @@
 import {UseGuards} from '@nestjs/common'
 import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql'
 import {LoginResponse} from '../auth/loginResponse'
+import {MyContext} from '../types/myContext'
+import {AuthGuard} from '../utils/auth.guard'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {User} from './user.entity'
@@ -10,10 +12,10 @@ import {UserService} from './user.service'
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards()
+  @UseGuards(AuthGuard)
   @Query(() => String)
-  protected() {
-    return "heyy I'm protected!"
+  protectedGqlEndpoint(@Context() ctx: MyContext) {
+    return `Protected GQL endpoint reached! your id is: ${ctx.jwtPayload?.userId}`
   }
 
   @Query(() => [User])

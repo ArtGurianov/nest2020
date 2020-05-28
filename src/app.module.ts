@@ -13,6 +13,7 @@ import {UserModule} from './user/user.module'
     ConfigModule.forRoot({load: [appConfig]}),
     TypeOrmModule.forRoot(typeOrmConfig),
     GraphQLModule.forRoot({
+      cors: {origin: 'http://localhost:3001', credentials: true},
       installSubscriptionHandlers: true,
       autoSchemaFile: 'schema.gql',
       // autoSchemaFile: true,

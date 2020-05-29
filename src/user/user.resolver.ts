@@ -39,6 +39,18 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
+  async logout(@Context() ctx: MyContext) {
+    const result = await this.userService.logout(ctx)
+    return result
+  }
+
+  @Query(() => User, {nullable: true})
+  async me(@Context() ctx: MyContext) {
+    const user = await this.userService.me(ctx)
+    return user ? user : null
+  }
+
+  @Mutation(() => Boolean)
   async revokeRefreshToken(@Args('userId') userId: string) {
     const success = await this.userService.revokeRefreshToken(userId)
     return success

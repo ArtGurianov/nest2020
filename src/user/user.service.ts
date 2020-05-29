@@ -47,6 +47,21 @@ export class UserService {
     this.jwtService.sendRefreshToken(res, refreshToken)
     return {
       accessToken: this.jwtService.createAccessToken(user),
+      user,
+    }
+  }
+
+  async me(ctx: MyContext): Promise<User | null> {
+    const authorization = ctx.req.headers['authorization']
+    if (!authorization) return null
+    try {
+      const token = authorization.split(' ')[1]
+      const jwtPayload = this.jwtService.verifyAccessToken(token)
+      const user = await this.userRepo.findOne({id: jwtPayload.userId})
+      return user ? user : null
+    } catch (err) {
+      console.log(err)
+      return null
     }
   }
 
@@ -103,5 +118,10 @@ export class UserService {
     this.jwtService.sendRefreshToken(res, refreshToken)
 
     return accessToken
+  }
+
+  async logout({res}: MyContext): Promise<boolean> {
+    this.jwtService.sendRefreshToken(res, '')
+    return true
   }
 }

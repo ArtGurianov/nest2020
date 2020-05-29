@@ -10,16 +10,19 @@ type User {
 
 type LoginResponse {
   accessToken: String!
+  user: User!
 }
 
 type Query {
   protectedGqlEndpoint: String!
   users: [User!]!
+  me: User
 }
 
 type Mutation {
   register(registerInput: RegisterInput!): Boolean!
   login(loginInput: LoginInput!): LoginResponse!
+  logout: Boolean!
   revokeRefreshToken(userId: String!): Boolean!
 }
 

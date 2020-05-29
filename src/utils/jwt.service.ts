@@ -35,6 +35,7 @@ export class JwtService {
     res.cookie('jid', token, {
       httpOnly: true,
       maxAge: 365 * 24 * 60 * 60 * 1000,
+      path: '/user/refresh_token',
     })
   }
 

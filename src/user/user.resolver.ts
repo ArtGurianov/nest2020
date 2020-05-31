@@ -1,18 +1,11 @@
 import {UseGuards} from '@nestjs/common'
 import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql'
-import {CustomError} from '../types/CustomError'
 import {MyContext} from '../types/myContext'
 import {AuthGuard} from '../utils/auth.guard'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
-import {
-  LoginResult,
-  LogoutResult,
-  MeResult,
-  RegistrationResult,
-  RevokeRefreshTokenResult,
-  UserResult,
-} from './user.customResults'
+import {LoginResult, RegistrationResult} from './user.customResults'
+import {User} from './user.entity'
 import {UserService} from './user.service'
 
 @Resolver()
@@ -25,8 +18,8 @@ export class UserResolver {
     return `Protected GQL endpoint reached! your id is: ${ctx.jwtPayload?.userId}`
   }
 
-  @Query(() => [UserResult])
-  async users(): Promise<Array<typeof UserResult>> {
+  @Query(() => [User])
+  async users(): Promise<User[]> {
     return await this.userService.users()
   }
 
@@ -34,8 +27,7 @@ export class UserResolver {
   async register(
     @Args('registerInput') registerInput: RegisterInput,
   ): Promise<typeof RegistrationResult> {
-    const result = await this.userService.register(registerInput)
-    return result
+    return await this.userService.register(registerInput)
   }
 
   @Mutation(() => LoginResult)
@@ -47,23 +39,18 @@ export class UserResolver {
     return result
   }
 
-  @Mutation(() => LogoutResult)
-  async logout(@Context() ctx: MyContext): Promise<typeof LogoutResult> {
-    const result = await this.userService.logout(ctx)
-    return result
+  @Mutation(() => Boolean)
+  async logout(@Context() ctx: MyContext): Promise<boolean> {
+    return await this.userService.logout(ctx)
   }
 
-  @Query(() => MeResult, {nullable: true})
-  async me(@Context() ctx: MyContext): Promise<typeof MeResult> {
-    const user = await this.userService.me(ctx)
-    return user ? user : new CustomError({errorMessage: 'could not fetch user'})
+  @Query(() => User, {nullable: true})
+  async me(@Context() ctx: MyContext): Promise<User> {
+    return await this.userService.me(ctx)
   }
 
-  @Mutation(() => RevokeRefreshTokenResult)
-  async revokeRefreshToken(
-    @Args('userId') userId: string,
-  ): Promise<typeof RevokeRefreshTokenResult> {
-    const success = await this.userService.revokeRefreshToken(userId)
-    return success
+  @Mutation(() => Boolean)
+  async revokeRefreshToken(@Args('userId') userId: string): Promise<boolean> {
+    return await this.userService.revokeRefreshToken(userId)
   }
 }

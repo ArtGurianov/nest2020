@@ -1,7 +1,7 @@
 import {createUnionType, Field, ObjectType} from '@nestjs/graphql'
-import {LoginResponse} from '../auth/loginResponse'
 import {BooleanResponse} from '../types/BooleanResponse'
 import {CustomError, CustomErrorInterface} from '../types/CustomError'
+import {LoginResponse} from '../types/loginResponse'
 import {User} from './user.entity'
 
 // USER RESULT (not ME)
@@ -32,10 +32,10 @@ export class RegistrationError extends CustomError {
     }
   }
 
-  @Field(() => String)
+  @Field(() => String, {nullable: true})
   emailErrorMessage?: string
 
-  @Field(() => String)
+  @Field(() => String, {nullable: true})
   passwordErrorMessage?: string
 }
 
@@ -66,38 +66,14 @@ export class LoginError extends CustomError {
     }
   }
 
-  @Field(() => String)
-  emailErrorMessage: string
+  @Field(() => String, {nullable: true})
+  emailErrorMessage?: string
 
-  @Field(() => String)
-  passwordErrorMessage: string
+  @Field(() => String, {nullable: true})
+  passwordErrorMessage?: string
 }
 
 export const LoginResult = createUnionType({
   name: 'LoginResult',
   types: () => [LoginResponse, LoginError],
-})
-
-// ME RESULT
-export const MeResult = createUnionType({
-  name: 'MeResult',
-  types: () => [User, CustomError],
-})
-
-// LOGOUT RESULT
-export const LogoutResult = createUnionType({
-  name: 'LogoutResult',
-  types: () => [BooleanResponse, CustomError],
-})
-
-// REVOKE REFRESH TOKEN RESULT
-export const RevokeRefreshTokenResult = createUnionType({
-  name: 'RevokeRefreshTokenResult',
-  types: () => [BooleanResponse, CustomError],
-})
-
-// USE REFRESH TOKEN RESULT
-export const UseRefreshTokenResult = createUnionType({
-  name: 'UseRefreshTokenResult',
-  types: () => [String, CustomError],
 })

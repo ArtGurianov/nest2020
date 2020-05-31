@@ -1,23 +1,22 @@
-import {Injectable} from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import {InjectRepository} from '@nestjs/typeorm'
 import {compare} from 'bcryptjs'
 import cookie from 'cookie'
 import {Request, Response} from 'express'
 import {BooleanResponse} from '../types/BooleanResponse'
-import {CustomError} from '../types/CustomError'
+import {LoginResponse} from '../types/loginResponse'
 import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
-import {
-  LoginResult,
-  LogoutResult,
-  MeResult,
-  RegistrationResult,
-  RevokeRefreshTokenResult,
-  UseRefreshTokenResult,
-  UserResult,
-} from './user.customResults'
+import {LoginResult, RegistrationResult} from './user.customResults'
+import {User} from './user.entity'
 import {UserRepository} from './user.repository'
 
 @Injectable()
@@ -27,18 +26,27 @@ export class UserService {
   @InjectRepository(UserRepository)
   private readonly userRepo: UserRepository
 
-  async users(): Promise<Array<typeof UserResult>> {
-    return this.userRepo.find()
+  async users(): Promise<User[]> {
+    const users = await this.userRepo.find()
+    if (users) {
+      return users
+    } else {
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
+    }
   }
 
   async register(
     registerInput: RegisterInput,
   ): Promise<typeof RegistrationResult> {
-    try {
-      await this.userRepo.save({...registerInput})
-    } catch {
-      return new BooleanResponse(false)
+    const result = await this.userRepo.save({...registerInput})
+    if (!result) {
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
     }
+
     return new BooleanResponse(true)
   }
 
@@ -48,89 +56,94 @@ export class UserService {
   ): Promise<typeof LoginResult> {
     const user = await this.userRepo.findOne({where: {email}})
     if (!user) {
-      throw new Error('Cannot find user')
+      throw new NotFoundException('Cannot find user.')
     }
     const valid = await compare(password, user.password)
     if (!valid) {
-      throw new Error('wrong password')
+      throw new ForbiddenException('Wrong password.')
     }
     const refreshToken = this.jwtService.createRefreshToken(user)
     this.jwtService.sendRefreshToken(res, refreshToken)
-    return {
-      accessToken: this.jwtService.createAccessToken(user),
-      user,
-    }
+    const accessToken = this.jwtService.createAccessToken(user)
+    return new LoginResponse({accessToken, user})
   }
 
-  async me(ctx: MyContext): Promise<typeof MeResult> {
+  async me(ctx: MyContext): Promise<User> {
     const authorization = ctx.req.headers['authorization']
-    if (!authorization) return new CustomError({errorMessage: 'not authorized'})
-    try {
-      const token = authorization.split(' ')[1]
-      const jwtPayload = this.jwtService.verifyAccessToken(token)
-      const user = await this.userRepo.findOne({id: jwtPayload.userId})
-      return user ? user : new CustomError({errorMessage: 'cannot find user'})
-    } catch (err) {
-      console.log(err)
-      return new CustomError({errorMessage: 'something went wrong'})
-    }
+    if (!authorization) throw new UnauthorizedException()
+    const token = authorization.split(' ')[1]
+    if (!token) throw new UnauthorizedException()
+    const jwtPayload = this.jwtService.verifyAccessToken(token)
+    if (!jwtPayload) throw new UnauthorizedException('Broken jwt.')
+    const user = await this.userRepo.findOne({id: jwtPayload.userId})
+    if (!user)
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
+    return user
   }
 
-  async revokeRefreshToken(
-    userId: string,
-  ): Promise<typeof RevokeRefreshTokenResult> {
+  async revokeRefreshToken(userId: string): Promise<boolean> {
     const result = await this.userRepo.increment(
       {id: userId},
       'tokenVersion',
       1,
     )
-    return new BooleanResponse(!!result)
+    if (!result)
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
+    return true
   }
 
-  async useRefreshToken(
-    req: Request,
-    res: Response,
-  ): Promise<typeof UseRefreshTokenResult> {
+  async useRefreshToken(req: Request, res: Response): Promise<string> {
     if (!req.headers.cookie) {
-      return new CustomError({errorMessage: 'No cookie in headers.'})
+      throw new UnauthorizedException('Cookie not provided.')
     }
 
     const {jid} = cookie.parse(req.headers.cookie)
 
     if (!jid) {
-      return new CustomError({errorMessage: 'No cookie in headers.'})
+      throw new UnauthorizedException('Refresh token not provided.')
     }
 
-    const payload = this.jwtService.verifyRefreshToken(jid)
+    const jwtPayload = this.jwtService.verifyRefreshToken(jid)
 
-    if (!payload) {
-      return new CustomError({errorMessage: 'Cannot parse your jwt'})
+    if (!jwtPayload) {
+      throw new UnauthorizedException('Broken jwt.')
     }
 
-    const user = await this.userRepo.findOne({id: payload.userId})
+    const user = await this.userRepo.findOne({id: jwtPayload.userId})
 
     if (!user) {
-      return new CustomError({errorMessage: 'Cannot find user'})
+      throw new NotFoundException('user not found')
     }
 
     const accessToken = this.jwtService.createAccessToken(user)
 
     if (!accessToken) {
-      return new CustomError({errorMessage: 'Cannot create access token'})
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
     }
 
-    if (user.tokenVersion !== payload.tokenVersion) {
-      return new CustomError({errorMessage: 'Revoked token.'})
+    if (user.tokenVersion !== jwtPayload.tokenVersion) {
+      throw new UnauthorizedException('Revoked token')
     }
 
     const refreshToken = this.jwtService.createRefreshToken(user)
+    if (!refreshToken) {
+      throw new ServiceUnavailableException(
+        'Ohhh.. Could not process operation.',
+      )
+    }
     this.jwtService.sendRefreshToken(res, refreshToken)
 
     return accessToken
   }
 
-  async logout({res}: MyContext): Promise<typeof LogoutResult> {
+  async logout({res}: MyContext): Promise<boolean> {
     this.jwtService.sendRefreshToken(res, '')
-    return new BooleanResponse(true)
+    return true
   }
 }

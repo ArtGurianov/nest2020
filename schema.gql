@@ -10,23 +10,15 @@ type User {
 
 type Query {
   protectedGqlEndpoint: String!
-  users: [UserResult!]!
-  me: MeResult
+  users: [User!]!
+  me: User
 }
-
-union UserResult = User | CustomError
-
-type CustomError {
-  errorMessage: String!
-}
-
-union MeResult = User | CustomError
 
 type Mutation {
   register(registerInput: RegisterInput!): RegistrationResult!
   login(loginInput: LoginInput!): LoginResult!
-  logout: LogoutResult!
-  revokeRefreshToken(userId: String!): RevokeRefreshTokenResult!
+  logout: Boolean!
+  revokeRefreshToken(userId: String!): Boolean!
 }
 
 union RegistrationResult = BooleanResponse | RegistrationError
@@ -37,8 +29,8 @@ type BooleanResponse {
 
 type RegistrationError {
   errorMessage: String!
-  emailErrorMessage: String!
-  passwordErrorMessage: String!
+  emailErrorMessage: String
+  passwordErrorMessage: String
 }
 
 """New user data"""
@@ -56,8 +48,8 @@ type LoginResponse {
 
 type LoginError {
   errorMessage: String!
-  emailErrorMessage: String!
-  passwordErrorMessage: String!
+  emailErrorMessage: String
+  passwordErrorMessage: String
 }
 
 """Login input data"""
@@ -65,7 +57,3 @@ input LoginInput {
   email: String!
   password: String!
 }
-
-union LogoutResult = BooleanResponse | CustomError
-
-union RevokeRefreshTokenResult = BooleanResponse | CustomError

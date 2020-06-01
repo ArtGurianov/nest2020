@@ -4,6 +4,8 @@ import {MyContext} from '../types/myContext'
 import {AuthGuard} from '../utils/auth.guard'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
+import {loginValidationPipe} from './pipes/user.loginInput.pipe'
+import {registerValidationPipe} from './pipes/user.registerInput.pipe'
 import {LoginResult, RegistrationResult} from './user.customResults'
 import {User} from './user.entity'
 import {UserService} from './user.service'
@@ -25,14 +27,14 @@ export class UserResolver {
 
   @Mutation(() => RegistrationResult)
   async register(
-    @Args('registerInput') registerInput: RegisterInput,
+    @Args('registerInput', registerValidationPipe) registerInput: RegisterInput,
   ): Promise<typeof RegistrationResult> {
     return await this.userService.register(registerInput)
   }
 
   @Mutation(() => LoginResult)
   async login(
-    @Args('loginInput') loginInput: LoginInput,
+    @Args('loginInput', loginValidationPipe) loginInput: LoginInput,
     @Context() ctx: MyContext,
   ): Promise<typeof LoginResult> {
     const result = await this.userService.login(loginInput, ctx)

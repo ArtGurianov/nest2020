@@ -8,6 +8,11 @@ type User {
   tokenVersion: Float!
 }
 
+type CustomError {
+  property: String!
+  errorMessages: String!
+}
+
 type Query {
   protectedGqlEndpoint: String!
   users: [User!]!
@@ -21,16 +26,14 @@ type Mutation {
   revokeRefreshToken(userId: String!): Boolean!
 }
 
-union RegistrationResult = BooleanResponse | RegistrationError
+union RegistrationResult = BooleanResponse | CustomErrorsResult
 
 type BooleanResponse {
   booleanResponse: Boolean!
 }
 
-type RegistrationError {
-  errorMessage: String!
-  emailErrorMessage: String
-  passwordErrorMessage: String
+type CustomErrorsResult {
+  errors: [CustomError!]!
 }
 
 """New user data"""
@@ -39,17 +42,11 @@ input RegisterInput {
   password: String!
 }
 
-union LoginResult = LoginResponse | LoginError
+union LoginResult = LoginResponse | CustomErrorsResult
 
 type LoginResponse {
   accessToken: String!
   user: User!
-}
-
-type LoginError {
-  errorMessage: String!
-  emailErrorMessage: String
-  passwordErrorMessage: String
 }
 
 """Login input data"""

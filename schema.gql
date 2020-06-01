@@ -10,7 +10,7 @@ type User {
 
 type CustomError {
   property: String!
-  errorMessages: String!
+  errorMessages: [String!]!
 }
 
 type Query {

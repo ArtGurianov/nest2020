@@ -8,7 +8,7 @@ export interface CustomErrorsInterface {
 export class CustomError {
   @Field(() => String)
   property: string
-  @Field(() => String)
+  @Field(() => [String])
   errorMessages: string[]
 }
 

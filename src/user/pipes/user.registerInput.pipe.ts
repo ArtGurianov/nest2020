@@ -5,7 +5,6 @@ import {
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common'
-import {CustomError, CustomErrorsResult} from '../../types/CustomErrorsResult'
 
 @Injectable()
 class RegisterValidationPipe extends ValidationPipe {
@@ -13,18 +12,7 @@ class RegisterValidationPipe extends ValidationPipe {
     try {
       await super.transform(value, metadata)
     } catch (e) {
-      const resultArray: CustomError[] = []
-      e.response.message.map((valErrObj: any) => {
-        const messages: string[] = []
-        Object.keys(valErrObj.constraints).forEach(key => {
-          messages.push(valErrObj.constraints[key])
-        })
-        resultArray.push({
-          property: valErrObj.property,
-          errorMessages: messages,
-        })
-      })
-      return new CustomErrorsResult({errors: resultArray})
+      throw new BadRequestException(e)
     }
     return value
   }

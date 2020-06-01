@@ -1,7 +1,8 @@
-import {UseGuards} from '@nestjs/common'
+import {UseFilters, UseGuards} from '@nestjs/common'
 import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql'
 import {MyContext} from '../types/myContext'
 import {AuthGuard} from '../utils/auth.guard'
+import {ValidationFilter} from '../utils/validation.filter'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {loginValidationPipe} from './pipes/user.loginInput.pipe'
@@ -26,6 +27,7 @@ export class UserResolver {
   }
 
   @Mutation(() => RegistrationResult)
+  @UseFilters(new ValidationFilter())
   async register(
     @Args('registerInput', registerValidationPipe) registerInput: RegisterInput,
   ): Promise<typeof RegistrationResult> {
@@ -33,6 +35,7 @@ export class UserResolver {
   }
 
   @Mutation(() => LoginResult)
+  @UseFilters(new ValidationFilter())
   async login(
     @Args('loginInput', loginValidationPipe) loginInput: LoginInput,
     @Context() ctx: MyContext,

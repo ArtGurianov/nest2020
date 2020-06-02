@@ -68,9 +68,10 @@ export class UserService {
     return new LoginResponse({accessToken, user})
   }
 
-  async me(ctx: MyContext): Promise<User> {
+  async me(ctx: MyContext): Promise<User | null> {
     const authorization = ctx.req.headers['authorization']
-    if (!authorization) throw new UnauthorizedException()
+    if (!authorization || !authorization.length)
+      throw new UnauthorizedException()
     const token = authorization.split(' ')[1]
     if (!token) throw new UnauthorizedException()
     const jwtPayload = this.jwtService.verifyAccessToken(token)
@@ -101,13 +102,13 @@ export class UserService {
       throw new UnauthorizedException('Cookie not provided.')
     }
 
-    const {jid} = cookie.parse(req.headers.cookie)
+    const parsed = cookie.parse(req.headers.cookie)
 
-    if (!jid) {
+    if (!parsed.jid) {
       throw new UnauthorizedException('Refresh token not provided.')
     }
 
-    const jwtPayload = this.jwtService.verifyRefreshToken(jid)
+    const jwtPayload = this.jwtService.verifyRefreshToken(parsed.jid)
 
     if (!jwtPayload) {
       throw new UnauthorizedException('Broken jwt.')

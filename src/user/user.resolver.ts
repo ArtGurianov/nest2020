@@ -50,7 +50,7 @@ export class UserResolver {
   }
 
   @Query(() => User, {nullable: true})
-  async me(@Context() ctx: MyContext): Promise<User> {
+  async me(@Context() ctx: MyContext): Promise<User | null> {
     return await this.userService.me(ctx)
   }
 

@@ -72,6 +72,9 @@ export class UserService {
     const authorization = ctx.req.headers['authorization']
     if (!authorization || !authorization.length)
       throw new UnauthorizedException()
+    // return new CustomErrorsResult({
+    //   errors: [{property: 'auth', errorMessages: ['Unauthorized']}],
+    // })
     const token = authorization.split(' ')[1]
     if (!token) throw new UnauthorizedException()
     const jwtPayload = this.jwtService.verifyAccessToken(token)

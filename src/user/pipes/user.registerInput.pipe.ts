@@ -12,7 +12,7 @@ class RegisterValidationPipe extends ValidationPipe {
     try {
       await super.transform(value, metadata)
     } catch (e) {
-      throw new BadRequestException(e)
+      throw new BadRequestException({...e, origin: 'ValidationPipe'})
     }
     return value
   }

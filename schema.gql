@@ -16,7 +16,13 @@ type User {
 type Query {
   protectedGqlEndpoint: String!
   users: [User!]!
-  me: User
+  me: MeResult!
+}
+
+union MeResult = User | CustomErrorsResult
+
+type CustomErrorsResult {
+  errors: [CustomError!]!
 }
 
 type Mutation {
@@ -30,10 +36,6 @@ union RegistrationResult = BooleanResponse | CustomErrorsResult
 
 type BooleanResponse {
   booleanResponse: Boolean!
-}
-
-type CustomErrorsResult {
-  errors: [CustomError!]!
 }
 
 """New user data"""

@@ -24,8 +24,8 @@ export const LoginResult = createUnionType({
   types: () => [LoginResponse, CustomErrorsResult],
 })
 
-// // ME RESULT
-// export const MeResult = createUnionType({
-//   name: 'MeResult',
-//   types: () => [User, CustomErrorsResult],
-// })
+// ME RESULT
+export const MeResult = createUnionType({
+  name: 'MeResult',
+  types: () => [User, CustomErrorsResult],
+})

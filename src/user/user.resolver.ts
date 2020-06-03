@@ -7,7 +7,7 @@ import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
 import {loginValidationPipe} from './pipes/user.loginInput.pipe'
 import {registerValidationPipe} from './pipes/user.registerInput.pipe'
-import {LoginResult, RegistrationResult} from './user.customResults'
+import {LoginResult, MeResult, RegistrationResult} from './user.customResults'
 import {User} from './user.entity'
 import {UserService} from './user.service'
 
@@ -49,8 +49,8 @@ export class UserResolver {
     return await this.userService.logout(ctx)
   }
 
-  @Query(() => User, {nullable: true})
-  async me(@Context() ctx: MyContext): Promise<User | null> {
+  @Query(() => MeResult)
+  async me(@Context() ctx: MyContext): Promise<typeof MeResult> {
     return await this.userService.me(ctx)
   }
 

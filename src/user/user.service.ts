@@ -16,7 +16,7 @@ import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
 import {LoginInput} from './input/user.loginInput'
 import {RegisterInput} from './input/user.registerInput'
-import {LoginResult, RegistrationResult} from './user.customResults'
+import {LoginResult, MeResult, RegistrationResult} from './user.customResults'
 import {User} from './user.entity'
 import {UserRepository} from './user.repository'
 
@@ -81,22 +81,31 @@ export class UserService {
     return new LoginResponse({accessToken, user})
   }
 
-  async me(ctx: MyContext): Promise<User | null> {
+  async me(ctx: MyContext): Promise<typeof MeResult> {
     const authorization = ctx.req.headers['authorization']
-    if (!authorization || !authorization.length)
-      throw new UnauthorizedException()
-    // return new CustomErrorsResult({
-    //   errors: [{property: 'auth', errorMessages: ['Unauthorized']}],
-    // })
+    if (!authorization || !authorization.length) {
+      //throw new UnauthorizedException()
+      return new CustomErrorsResult({
+        errors: [{property: 'auth', errorMessages: ['no auth header']}],
+      })
+    }
+
     const token = authorization.split(' ')[1]
-    if (!token) throw new UnauthorizedException()
+    if (!token) {
+      return new CustomErrorsResult({
+        //throw new UnauthorizedException()
+        errors: [{property: 'auth', errorMessages: ['incorrect auth header']}],
+      })
+    }
     const jwtPayload = this.jwtService.verifyAccessToken(token)
-    if (!jwtPayload) throw new UnauthorizedException('Broken jwt.')
+    if (!jwtPayload) {
+      return new CustomErrorsResult({
+        //throw new UnauthorizedException('Invalid jwt.')
+        errors: [{property: 'auth', errorMessages: ['Invalid jwt']}],
+      })
+    }
     const user = await this.userRepo.findOne({id: jwtPayload.userId})
-    if (!user)
-      throw new ServiceUnavailableException(
-        'Ohhh.. Could not process operation.',
-      )
+    if (!user) throw new NotFoundException()
     return user
   }
 

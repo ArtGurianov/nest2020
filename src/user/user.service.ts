@@ -10,6 +10,7 @@ import {compare} from 'bcryptjs'
 import cookie from 'cookie'
 import {Request, Response} from 'express'
 import {BooleanResponse} from '../types/BooleanResponse'
+import {CustomErrorsResult} from '../types/CustomErrorsResult'
 import {LoginResponse} from '../types/loginResponse'
 import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
@@ -40,6 +41,18 @@ export class UserService {
   async register(
     registerInput: RegisterInput,
   ): Promise<typeof RegistrationResult> {
+    const alreadyExists = await this.userRepo.findOne({
+      email: registerInput.email,
+    })
+    if (alreadyExists)
+      return new CustomErrorsResult({
+        errors: [
+          {
+            property: 'register',
+            errorMessages: ['User already exists. Please login'],
+          },
+        ],
+      })
     const result = await this.userRepo.save({...registerInput})
     if (!result) {
       throw new ServiceUnavailableException(

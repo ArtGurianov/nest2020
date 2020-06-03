@@ -2,15 +2,15 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type CustomError {
+  property: String!
+  errorMessages: [String!]!
+}
+
 type User {
   id: ID!
   email: String!
   tokenVersion: Float!
-}
-
-type CustomError {
-  property: String!
-  errorMessages: [String!]!
 }
 
 type Query {

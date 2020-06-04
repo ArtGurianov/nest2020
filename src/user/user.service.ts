@@ -10,7 +10,7 @@ import {compare} from 'bcryptjs'
 import cookie from 'cookie'
 import {Request, Response} from 'express'
 import {BooleanResponse} from '../types/BooleanResponse'
-import {CustomErrorsResult} from '../types/CustomErrorsResult'
+import {CustomError, CustomErrorsResult} from '../types/CustomErrorsResult'
 import {LoginResponse} from '../types/loginResponse'
 import {MyContext} from '../types/myContext'
 import {JwtService} from '../utils/jwt.service'
@@ -47,10 +47,10 @@ export class UserService {
     if (alreadyExists)
       return new CustomErrorsResult({
         errors: [
-          {
+          new CustomError({
             property: 'register',
             errorMessages: ['User already exists. Please login'],
-          },
+          }),
         ],
       })
     const result = await this.userRepo.save({...registerInput})
@@ -70,7 +70,12 @@ export class UserService {
     const user = await this.userRepo.findOne({where: {email}})
     if (!user) {
       return new CustomErrorsResult({
-        errors: [{property: 'login', errorMessages: ['User not registered!']}],
+        errors: [
+          new CustomError({
+            property: 'login',
+            errorMessages: ['User not registered!'],
+          }),
+        ],
       })
     }
     const valid = await compare(password, user.password)
@@ -88,7 +93,12 @@ export class UserService {
     if (!authorization || !authorization.length) {
       //throw new UnauthorizedException()
       return new CustomErrorsResult({
-        errors: [{property: 'auth', errorMessages: ['no auth header']}],
+        errors: [
+          new CustomError({
+            property: 'auth',
+            errorMessages: ['no auth header'],
+          }),
+        ],
       })
     }
 
@@ -96,14 +106,21 @@ export class UserService {
     if (!token) {
       return new CustomErrorsResult({
         //throw new UnauthorizedException()
-        errors: [{property: 'auth', errorMessages: ['incorrect auth header']}],
+        errors: [
+          new CustomError({
+            property: 'auth',
+            errorMessages: ['incorrect auth header'],
+          }),
+        ],
       })
     }
     const jwtPayload = this.jwtService.verifyAccessToken(token)
     if (!jwtPayload) {
       return new CustomErrorsResult({
         //throw new UnauthorizedException('Invalid jwt.')
-        errors: [{property: 'auth', errorMessages: ['Invalid jwt']}],
+        errors: [
+          new CustomError({property: 'auth', errorMessages: ['Invalid jwt']}),
+        ],
       })
     }
     const user = await this.userRepo.findOne({id: jwtPayload.userId})

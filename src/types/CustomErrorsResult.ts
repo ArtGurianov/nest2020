@@ -7,6 +7,19 @@ export interface CustomErrorsInterface {
 
 @ObjectType()
 export class CustomError {
+  constructor({
+    property,
+    errorMessages,
+  }: {
+    property: string
+    errorMessages: string[]
+  }) {
+    this.id = v4()
+    this.property = property
+    this.errorMessages = errorMessages
+  }
+  @Field(() => ID)
+  id: string
   @Field(() => String)
   property: string
   @Field(() => [String])

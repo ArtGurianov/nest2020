@@ -12,10 +12,12 @@ export class ValidationFilter implements GqlExceptionFilter {
         Object.keys(valErrObj.constraints).forEach(key => {
           messages.push(valErrObj.constraints[key])
         })
-        resultArray.push({
-          property: valErrObj.property,
-          errorMessages: messages,
-        })
+        resultArray.push(
+          new CustomError({
+            property: valErrObj.property,
+            errorMessages: messages,
+          }),
+        )
       })
 
       return new CustomErrorsResult({errors: resultArray})

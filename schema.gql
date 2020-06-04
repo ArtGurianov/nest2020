@@ -3,6 +3,7 @@
 # ------------------------------------------------------
 
 type CustomError {
+  id: ID!
   property: String!
   errorMessages: [String!]!
 }

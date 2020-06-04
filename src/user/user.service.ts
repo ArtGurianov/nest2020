@@ -69,7 +69,9 @@ export class UserService {
   ): Promise<typeof LoginResult> {
     const user = await this.userRepo.findOne({where: {email}})
     if (!user) {
-      throw new NotFoundException('Cannot find user.')
+      return new CustomErrorsResult({
+        errors: [{property: 'login', errorMessages: ['User not registered!']}],
+      })
     }
     const valid = await compare(password, user.password)
     if (!valid) {

@@ -1,4 +1,5 @@
-import {Field, ObjectType} from '@nestjs/graphql'
+import {Field, ID, ObjectType} from '@nestjs/graphql'
+import {v4} from 'uuid'
 
 export interface CustomErrorsInterface {
   errors: CustomError[]
@@ -16,7 +17,11 @@ export class CustomError {
 export class CustomErrorsResult implements CustomErrorsInterface {
   constructor({errors}: CustomErrorsInterface) {
     this.errors = errors
+    this.id = v4()
   }
+
+  @Field(() => ID)
+  id: string
 
   @Field(() => [CustomError])
   errors: CustomError[]

@@ -22,6 +22,7 @@ type Query {
 union MeResult = User | CustomErrorsResult
 
 type CustomErrorsResult {
+  id: ID!
   errors: [CustomError!]!
 }
 

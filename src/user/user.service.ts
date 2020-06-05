@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -80,7 +79,14 @@ export class UserService {
     }
     const valid = await compare(password, user.password)
     if (!valid) {
-      throw new ForbiddenException('Wrong password.')
+      return new CustomErrorsResult({
+        errors: [
+          new CustomError({
+            property: 'login',
+            errorMessages: ['Wrong password'],
+          }),
+        ],
+      })
     }
     const refreshToken = this.jwtService.createRefreshToken(user)
     this.jwtService.sendRefreshToken(res, refreshToken)
